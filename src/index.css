@@ -1,0 +1,163 @@
+:root {
+  /* Premium Career Vault Palette */
+  --primary: hsl(230, 85%, 60%);
+  --primary-glow: hsla(230, 85%, 60%, 0.3);
+  --secondary: hsl(260, 85%, 65%);
+  --accent: hsl(45, 100%, 50%);
+  /* Gold for the Vault */
+
+  --bg-main: hsl(220, 25%, 98%);
+  --bg-card: hsl(0, 0%, 100%);
+  --bg-dark: hsl(220, 30%, 10%);
+
+  --text-main: hsl(220, 40%, 12%);
+  --text-muted: hsl(220, 15%, 45%);
+  --text-on-dark: hsl(0, 0%, 98%);
+
+  --border: hsl(220, 20%, 92%);
+  --border-hover: hsl(230, 85%, 85%);
+
+  --success: hsl(155, 90%, 35%);
+  --warning: hsl(38, 95%, 45%);
+  --danger: hsl(0, 85%, 50%);
+
+  /* Shadows & Depth */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 8px 16px -4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 20px 40px -8px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px var(--primary-glow);
+
+  /* Modern Radii */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-main: hsl(220, 35%, 6%);
+    --bg-card: hsl(220, 30%, 10%);
+    --text-main: hsl(220, 20%, 96%);
+    --text-muted: hsl(220, 15%, 70%);
+    --border: hsl(220, 20%, 16%);
+    --border-hover: hsl(230, 85%, 25%);
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  min-height: 100vh;
+  transition: background-color 0.5s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+button:active {
+  transform: scale(0.96);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Animations & Effects */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hover-lift {
+  transition: var(--transition);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1.25rem;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+  }
+}
