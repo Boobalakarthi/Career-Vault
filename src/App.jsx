@@ -15,6 +15,7 @@ import { Assessments } from './pages/Assessments';
 import { MyApplications } from './pages/MyApplications';
 import { InterviewPrep } from './pages/InterviewPrep';
 import { Landing } from './pages/Landing';
+import { ApplierDashboard } from './pages/ApplierDashboard';
 
 // Placeholder Pages for initial wiring
 const Dashboard = ({ role }) => (
@@ -35,7 +36,7 @@ const App = () => {
                         {/* Applier Routes */}
                         <Route path="/dashboard" element={
                             <ProtectedRoute allowedRoles={['APPLIER']}>
-                                <Dashboard role="APPLIER" />
+                                <ApplierDashboard />
                             </ProtectedRoute>
                         } />
                         <Route path="/profile" element={

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { useAuth } from '../hooks/useAuth';
+import { useProfile } from '../hooks/useProfile';
 import {
     User, Mail, Phone, MapPin, Globe, Linkedin, Github,
-    Book, Briefcase, Code, Award, CheckCircle, Plus, Trash2, Save, FileText
+    Book, Briefcase, Code, Award, CheckCircle, Plus, Trash2, Save, FileText, AlertCircle
 } from 'lucide-react';
 import { ResumeUpload } from '../components/ResumeUpload';
 import { ATSResumeGenerator } from '../components/ATSResumeGenerator';
@@ -13,37 +14,25 @@ import { RewardsPanel } from '../components/RewardsPanel';
 
 export const Profile = () => {
     const { user } = useAuth();
+    const { profile, loading, error, saveProfile } = useProfile();
     const [activeTab, setActiveTab] = useState('personal');
 
-    // Real-time profile from Dexie liveQuery
-    const profile = useLiveQuery(
-        () => user ? db.profiles.where({ userId: user.id }).first() : null,
-        [user?.id]
+    if (loading) return (
+        <div className="profile-loading">
+            <div className="pulse-loader"></div>
+            <p>Scanning Digital Vault...</p>
+        </div>
     );
 
-    // Auto-create profile if doesn't exist
-    useEffect(() => {
-        if (profile === null && user) {
-            db.profiles.add({
-                userId: user.id,
-                email: user.email,
-                personal: { name: user.name || '', phone: '', location: '', linkedin: '', portfolio: '', bio: '' },
-                education: [],
-                experience: [],
-                skills: [],
-                projects: [],
-                certifications: []
-            });
-        }
-    }, [profile, user]);
+    if (error) return (
+        <div className="profile-error">
+            <AlertCircle size={48} color="var(--danger)" />
+            <h2>Sync Failed</h2>
+            <p>{error}</p>
+        </div>
+    );
 
-    const saveProfile = async (updatedProfile) => {
-        await db.profiles.update(profile.id, updatedProfile);
-        // liveQuery auto-updates — no manual setState needed
-    };
-
-    if (profile === undefined) return <div className="loading">Loading Profile...</div>;
-    if (!profile) return <div className="loading">Setting up Profile...</div>;
+    if (!profile) return null; // Hook handles creation, but just in case
 
     const calculateSecurityScore = () => {
         let filled = 0;
@@ -154,6 +143,10 @@ export const Profile = () => {
           .profile-header { padding: 1.25rem; }
           .avatar-placeholder { width: 56px; height: 56px; font-size: 1.5rem; }
         }
+
+        .profile-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; gap: 1.5rem; }
+        .pulse-loader { width: 48px; height: 48px; border-radius: 50%; background: var(--primary); animation: pulse 1.5s infinite ease-in-out; }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(0.8); opacity: 0.5; } }
       `}</style>
         </div>
     );

@@ -1,3 +1,4 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { useAuth } from './useAuth';
@@ -9,38 +10,53 @@ import { useAuth } from './useAuth';
  */
 export const useProfile = () => {
     const { user } = useAuth();
+    const [creationError, setCreationError] = useState(null);
 
-    const profile = useLiveQuery(
-        () => user ? db.profiles.where({ userId: user.id }).first() : null,
+    const profileData = useLiveQuery(
+        () => user ? db.profiles.where({ userId: user.id }).toArray() : null,
         [user?.id]
     );
 
-    const createProfile = async () => {
-        if (!user) return null;
-        const newProfile = {
-            userId: user.id,
-            email: user.email,
-            personal: { name: user.name || '', phone: '', location: '', linkedin: '', portfolio: '', bio: '' },
-            education: [],
-            experience: [],
-            skills: [],
-            projects: [],
-            certifications: []
+    const profile = profileData?.[0] || null;
+    const loading = profileData === undefined && !creationError;
+
+    // Auto-create profile if user exists but profile doesn't (and it's not still loading)
+    useEffect(() => {
+        const initProfile = async () => {
+            if (user && profileData !== undefined && profileData.length === 0) {
+                try {
+                    console.log("System: Initializing profile for", user.email);
+                    await db.profiles.add({
+                        userId: user.id,
+                        email: user.email,
+                        personal: { name: user.name || '', phone: '', location: '', linkedin: '', portfolio: '', bio: '' },
+                        education: [],
+                        experience: [],
+                        skills: [],
+                        projects: [],
+                        certifications: []
+                    });
+                } catch (err) {
+                    // Ignore "Key already exists" errors as they might happen during race conditions
+                    if (err.name !== 'ConstraintError') {
+                        console.error("Profile initialization error:", err);
+                        setCreationError(err.message);
+                    }
+                }
+            }
         };
-        const id = await db.profiles.add(newProfile);
-        return { ...newProfile, id };
-    };
+        initProfile();
+    }, [user, profileData]);
 
     const saveProfile = async (updatedProfile) => {
         if (!updatedProfile?.id) return;
         await db.profiles.update(updatedProfile.id, updatedProfile);
-        // No need to setProfile — liveQuery will auto-update
     };
 
     return {
         profile,
         saveProfile,
-        createProfile,
-        loading: profile === undefined, // undefined = still loading, null = no profile found
+        loading,
+        error: creationError
     };
 };

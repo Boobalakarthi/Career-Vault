@@ -116,33 +116,39 @@ export const Landing = () => {
           <p>One platform, three powerful experiences tailored for success.</p>
         </div>
         <div className="roles-grid">
-          <div className="role-card glass">
-            <div className="role-icon blue"><Target size={32} /></div>
-            <h3>For Appliers</h3>
-            <ul>
-              <li><ChevronRight size={14} /> ATS Resume Generation</li>
-              <li><ChevronRight size={14} /> Digital Asset Vault</li>
-              <li><ChevronRight size={14} /> Career Security Score</li>
-            </ul>
-          </div>
-          <div className="role-card glass">
-            <div className="role-icon green"><Users size={32} /></div>
-            <h3>For HR</h3>
-            <ul>
-              <li><ChevronRight size={14} /> Smart Job Posting</li>
-              <li><ChevronRight size={14} /> AI Candidate Ranking</li>
-              <li><ChevronRight size={14} /> Pipeline Management</li>
-            </ul>
-          </div>
-          <div className="role-card glass">
-            <div className="role-icon purple"><ShieldCheck size={32} /></div>
-            <h3>For Admins</h3>
-            <ul>
-              <li><ChevronRight size={14} /> Global Visibility</li>
-              <li><ChevronRight size={14} /> User Entitlements</li>
-              <li><ChevronRight size={14} /> Platform Analytics</li>
-            </ul>
-          </div>
+          <Link to="/login" className="role-card-link">
+            <div className="role-card glass">
+              <div className="role-icon blue"><Target size={32} /></div>
+              <h3>For Appliers</h3>
+              <ul>
+                <li><ChevronRight size={14} /> ATS Resume Generation</li>
+                <li><ChevronRight size={14} /> Digital Asset Vault</li>
+                <li><ChevronRight size={14} /> Career Security Score</li>
+              </ul>
+            </div>
+          </Link>
+          <Link to="/login" className="role-card-link">
+            <div className="role-card glass">
+              <div className="role-icon green"><Users size={32} /></div>
+              <h3>For HR</h3>
+              <ul>
+                <li><ChevronRight size={14} /> Smart Job Posting</li>
+                <li><ChevronRight size={14} /> AI Candidate Ranking</li>
+                <li><ChevronRight size={14} /> Pipeline Management</li>
+              </ul>
+            </div>
+          </Link>
+          <Link to="/login" className="role-card-link">
+            <div className="role-card glass">
+              <div className="role-icon purple"><ShieldCheck size={32} /></div>
+              <h3>For Admins</h3>
+              <ul>
+                <li><ChevronRight size={14} /> Global Visibility</li>
+                <li><ChevronRight size={14} /> User Entitlements</li>
+                <li><ChevronRight size={14} /> Platform Analytics</li>
+              </ul>
+            </div>
+          </Link>
         </div>
       </section>
 
@@ -332,22 +338,25 @@ export const Landing = () => {
           gap: 2rem;
         }
 
-        .role-card {
-          padding: 3rem 2rem;
-          border-radius: var(--radius-xl);
-          text-align: center;
+        .role-card h3 { font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--text-main); }
+        .role-card ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+        .role-card li { display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-size: 0.95rem; color: var(--text-muted); }
+
+        .role-card-link {
+          text-decoration: none;
+          display: block;
           transition: var(--transition);
         }
 
-        .role-card:hover { transform: translateY(-10px); }
-        .role-icon { width: 80px; height: 80px; border-radius: 2rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; }
-        .role-icon.blue { background: rgba(79, 70, 229, 0.1); color: var(--primary); }
-        .role-icon.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .role-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        .role-card-link:hover .role-card {
+          transform: translateY(-10px);
+          border-color: var(--primary);
+          box-shadow: var(--shadow-xl);
+        }
 
-        .role-card h3 { font-size: 1.5rem; margin-bottom: 1.5rem; }
-        .role-card ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
-        .role-card li { display: flex; align-items: center; gap: 0.5rem; justify-content: center; font-size: 0.95rem; color: var(--text-muted); }
+        .role-card-link:hover .role-card h3 {
+          color: var(--primary);
+        }
 
         @media (max-width: 900px) {
           .hero { grid-template-columns: 1fr; text-align: center; }

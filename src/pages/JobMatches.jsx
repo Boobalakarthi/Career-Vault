@@ -2,18 +2,17 @@ import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { useAuth } from '../hooks/useAuth';
+import { useProfile } from '../hooks/useProfile';
 import { calculateMatchScore } from '../utils/matchingEngine';
 import { Briefcase, Target, BookOpen, ChevronRight, Zap, AlertTriangle, TrendingUp } from 'lucide-react';
 
 export const JobMatches = () => {
     const { user } = useAuth();
+    const { profile, loading: profileLoading } = useProfile();
 
-    // Real-time: profile and jobs update automatically
-    const profile = useLiveQuery(
-        () => user ? db.profiles.where({ userId: user.id }).first() : null,
-        [user?.id]
-    );
-    const jobs = useLiveQuery(() => db.jobs.toArray(), []);
+    // Real-time: jobs update automatically
+    const jobsData = useLiveQuery(() => db.jobs.toArray(), []);
+    const jobs = jobsData || [];
 
     const matches = (profile && jobs && jobs.length > 0)
         ? jobs.map(job => ({
@@ -45,7 +44,7 @@ export const JobMatches = () => {
         alert(`Applied to ${job.title}!`);
     };
 
-    if (profile === undefined || jobs === undefined) return <div>Analyzing matches...</div>;
+    if (profileLoading || jobs === undefined) return <div>Analyzing matches...</div>;
 
     return (
         <div className="matches-container animate-fade-in">

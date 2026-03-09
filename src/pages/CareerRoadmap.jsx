@@ -2,18 +2,14 @@ import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/db';
 import { useAuth } from '../hooks/useAuth';
+import { useProfile } from '../hooks/useProfile';
 import { calculateMatchScore } from '../utils/matchingEngine';
 import { Rocket, CheckCircle2, Bookmark } from 'lucide-react';
 
 export const CareerRoadmap = () => {
     const { user } = useAuth();
+    const { profile, loading: profileLoading } = useProfile();
     const [targetRole, setTargetRole] = useState('Senior Frontend Developer');
-
-    // Real-time profile
-    const profile = useLiveQuery(
-        () => user ? db.profiles.where({ userId: user.id }).first() : null,
-        [user?.id]
-    );
 
     const courses = useLiveQuery(() => db.courses.toArray(), []);
 
@@ -38,7 +34,7 @@ export const CareerRoadmap = () => {
 
     const roadmap = generateRoadmap();
 
-    if (profile === undefined) return <div>Generating your roadmap...</div>;
+    if (profileLoading) return <div>Generating your roadmap...</div>;
     if (!profile || !roadmap) return (
         <div style={{ textAlign: 'center', padding: '3rem' }}>
             <Rocket size={48} color="var(--primary)" />
