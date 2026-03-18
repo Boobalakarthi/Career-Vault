@@ -1,8 +1,17 @@
 {
-    "rewrites": [
-        {
-            "source": "/((?!assets/).*)",
-            "destination": "/index.html"
-        }
-    ]
+  "functions": {
+    "server/server.js": {
+      "runtime": "vercel-node@latest"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/server/server.js"
+    },
+    {
+      "source": "/((?!assets/|api/).*)",
+      "destination": "/index.html"
+    }
+  ]
 }
