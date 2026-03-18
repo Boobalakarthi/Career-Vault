@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { LogIn, Mail, Lock, Shield } from 'lucide-react';
 
@@ -14,7 +14,9 @@ export const Login = () => {
     e.preventDefault();
     const res = await login(email, password);
     if (res.success) {
-      navigate('/dashboard');
+      if (res.user.role === 'HR') navigate('/hr-dashboard');
+      else if (res.user.role === 'ADMIN') navigate('/admin-dashboard');
+      else navigate('/dashboard');
     } else {
       setError(res.message);
     }
@@ -56,6 +58,10 @@ export const Login = () => {
             Sign In <LogIn size={18} />
           </button>
         </form>
+
+        <div className="login-signup-link">
+          <p>Don't have an account? <Link to="/register">Sign Up</Link></p>
+        </div>
 
         <div className="login-footer">
           <p>Default credentials (demo):</p>
@@ -157,12 +163,18 @@ export const Login = () => {
           text-align: center;
           border: 1px solid var(--danger);
         }
-        .login-footer {
-          margin-top: 2rem;
-          font-size: 0.8rem;
+        .login-signup-link {
+          text-align: center;
+          margin-top: 1.5rem;
+          font-size: 0.9rem;
           color: var(--text-muted);
-          border-top: 1px solid var(--border);
-          padding-top: 1rem;
+        }
+        .login-signup-link a {
+          color: var(--primary);
+          font-weight: 700;
+        }
+        .login-footer {
+          margin-top: 1.5rem;
         }
         .login-footer ul {
           list-style: none;

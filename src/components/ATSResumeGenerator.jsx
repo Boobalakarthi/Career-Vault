@@ -11,37 +11,44 @@ export const ATSResumeGenerator = ({ profile }) => {
     // Header
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
-    doc.text(profile.personal.name || 'Your Name', margin, y);
+    doc.text(profile.name || profile.personal?.name || 'Your Name', margin, y);
 
     y += 10;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    const contact = [profile.email, profile.personal.phone, profile.personal.location, profile.personal.linkedin]
+    const contact = [profile.email, profile.personal?.phone, profile.personal?.location, profile.personal?.linkedin]
       .filter(Boolean).join(' | ');
-    doc.text(contact, margin, y);
+    if (contact) doc.text(contact, margin, y);
 
     y += 15;
     // Summary
-    if (profile.personal.bio) {
+    if (profile.personal?.bio) {
       doc.setFont('helvetica', 'bold');
       doc.text('PROFESSIONAL SUMMARY', margin, y);
       y += 5;
       doc.setFont('helvetica', 'normal');
-      const lines = doc.splitTextToSize(profile.personal.bio, 170);
+      const lines = doc.splitTextToSize(profile.personal?.bio || '', 170);
       doc.text(lines, margin, y);
       y += (lines.length * 5) + 5;
     }
 
     // Experience
-    if (profile.experience.length > 0) {
+    if (profile.experience && profile.experience.length > 0) {
       doc.setFont('helvetica', 'bold');
       doc.text('EXPERIENCE', margin, y);
       y += 7;
       profile.experience.forEach(exp => {
         doc.setFont('helvetica', 'bold');
-        doc.text(`${exp.company} - ${exp.role}`, margin, y);
-        y += 5;
+        doc.text(`${exp.company}`, margin, y);
         doc.setFont('helvetica', 'normal');
+        doc.text(`${exp.role}`, margin + 60, y);
+        y += 5;
+        if (exp.startDate || exp.endDate) {
+          doc.setFontSize(9);
+          doc.text(`${exp.startDate} - ${exp.endDate}`, margin, y);
+          y += 5;
+        }
+        doc.setFontSize(10);
         const desc = doc.splitTextToSize(exp.description, 170);
         doc.text(desc, margin, y);
         y += (desc.length * 5) + 5;
@@ -49,7 +56,7 @@ export const ATSResumeGenerator = ({ profile }) => {
     }
 
     // Skills
-    if (profile.skills.length > 0) {
+    if (profile.skills && profile.skills.length > 0) {
       doc.setFont('helvetica', 'bold');
       doc.text('SKILLS', margin, y);
       y += 7;
@@ -61,18 +68,27 @@ export const ATSResumeGenerator = ({ profile }) => {
     }
 
     // Education
-    if (profile.education.length > 0) {
+    if (profile.education && profile.education.length > 0) {
       doc.setFont('helvetica', 'bold');
       doc.text('EDUCATION', margin, y);
       y += 7;
       profile.education.forEach(edu => {
         doc.setFont('helvetica', 'normal');
-        doc.text(`${edu.degree} | ${edu.institute} | Graduated ${edu.endYear}`, margin, y);
+        doc.text(`${edu.qualification} | ${edu.institute}`, margin, y);
+        if (edu.endYear) {
+            doc.text(`Graduated ${edu.endYear}`, 150, y);
+        }
         y += 5;
+        if (edu.field) {
+            doc.setFontSize(9);
+            doc.text(`${edu.field} | Score: ${edu.score || 'N/A'}`, margin, y);
+            y += 5;
+        }
+        doc.setFontSize(10);
       });
     }
 
-    doc.save(`${profile.personal.name || 'Resume'}_CareerVault_ATS.pdf`);
+    doc.save(`${profile.name || profile.personal?.name || 'Resume'}_CareerVault_ATS.pdf`);
   };
 
   return (

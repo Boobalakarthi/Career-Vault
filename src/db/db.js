@@ -11,7 +11,8 @@ db.version(1).stores({
     courses: '++id, title, category',
     learningPaths: '++id, targetRole',
     assessments: '++id, title, role',
-    tickets: '++id, userId, status',
+    assessmentResults: '++id, userId, testId, date',
+    tickets: '++id, userId, status, category, priority',
     notifications: '++id, userId, read',
     vaultAssets: '++id, userId, name, url, type, date' // Added for the new Vault feature
 });

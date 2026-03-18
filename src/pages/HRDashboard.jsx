@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db/db';
+import { jobApi, profileApi, applicationApi, notificationApi } from '../db/api';
 import { useAuth } from '../hooks/useAuth';
 import { calculateMatchScore } from '../utils/matchingEngine';
 import { Users, Briefcase, ChevronRight, Star, ArrowUpRight, Filter, Plus, Trash2 } from 'lucide-react';
@@ -9,22 +8,50 @@ import { Link } from 'react-router-dom';
 export const HRDashboard = () => {
     const { user } = useAuth();
     const [selectedJobId, setSelectedJobId] = useState(null);
+    const [jobs, setJobs] = useState([]);
+    const [candidates, setCandidates] = useState([]);
+    const [applications, setApplications] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Real-time: jobs and candidates auto-update
-    const jobs = useLiveQuery(
-        () => user ? db.jobs.where({ hrId: user.id }).toArray() : [],
-        [user?.id]
-    );
-    const candidates = useLiveQuery(() => db.profiles.toArray(), []);
-    const applications = useLiveQuery(() => db.applications.toArray(), []);
-
-    const selectedJob = jobs?.find(j => j.id === selectedJobId) || (jobs && jobs[0]) || null;
+    const loadData = async () => {
+        const userId = user?._id || user?.id;
+        if (!userId) return;
+        try {
+            setLoading(true);
+            const [jobsRes, profilesRes, appsRes] = await Promise.all([
+                jobApi.getAll(), // Ideally filtered by HR on server
+                profileApi.getAllAppliers ? profileApi.getAllAppliers() : profileApi.get('all'), // Need a way to get all appliers
+                applicationApi.getAll ? applicationApi.getAll() : applicationApi.getByUser(user.id) // Need HR view of apps
+            ]);
+            
+            // For now, filter jobs locally if backend doesn't support hrId filter yet
+            const myJobs = jobsRes.data.filter(j => {
+                const jobHrId = String(j.hrId?._id || j.hrId || '');
+                const jobPostedBy = String(j.postedBy || '');
+                return jobHrId === String(userId) || jobPostedBy === String(userId);
+            });
+            setJobs(myJobs);
+            
+            // For candidates, we need a list of users with role APPLIER
+            // Assuming profileApi.get('all') might return all or we need a new endpoint
+            setCandidates(profilesRes.data || []);
+            setApplications(appsRes.data || []);
+            
+            if (myJobs.length > 0 && !selectedJobId) {
+                setSelectedJobId(myJobs[0].id);
+            }
+        } catch (err) {
+            console.error("Dashboard load error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        if (jobs && jobs.length > 0 && !selectedJobId) {
-            setSelectedJobId(jobs[0].id);
-        }
-    }, [jobs]);
+        loadData();
+    }, [user?._id, user?.id]);
+
+    const selectedJob = jobs?.find(j => j.id === selectedJobId) || null;
 
     const rankedCandidates = (selectedJob && candidates && candidates.length > 0)
         ? candidates.map(c => ({
@@ -40,12 +67,21 @@ export const HRDashboard = () => {
 
     const deleteJob = async (jobId) => {
         if (!confirm('Are you sure you want to delete this job?')) return;
-        await db.jobs.delete(jobId);
-        await db.applications.where({ jobId }).delete();  // Clean up related apps
-        if (selectedJobId === jobId) setSelectedJobId(null);
+        try {
+            await jobApi.delete(jobId);
+            loadData();
+            if (selectedJobId === jobId) setSelectedJobId(null);
+        } catch (err) {
+            console.error("Delete job error:", err);
+        }
     };
 
-    if (!jobs || !candidates) return <div>Loading dashboard...</div>;
+    if (loading) return (
+        <div className="dashboard-loading">
+            <div className="pulse-loader"></div>
+            <p>Syncing Talent Pipeline...</p>
+        </div>
+    );
 
     return (
         <div className="hr-dashboard animate-fade-in">
@@ -91,7 +127,7 @@ export const HRDashboard = () => {
                                                 {can.match.score}<sub>%</sub>
                                             </div>
                                             <div className="can-info">
-                                                <h4>{can.personal?.name || 'Anonymous'}</h4>
+                                                <h4>{can.name || 'Anonymous'}</h4>
                                                 <p>{can.personal?.location || 'Location hidden'}</p>
                                             </div>
                                         </div>
@@ -109,20 +145,22 @@ export const HRDashboard = () => {
                                                 value={can.appStatus || 'Applied'}
                                                 onChange={async (e) => {
                                                     const val = e.target.value;
-                                                    const app = await db.applications.where({ jobId: selectedJob.id, applierId: can.userId }).first();
-                                                    if (app) {
-                                                        await db.applications.update(app.id, { status: val });
-                                                    } else {
-                                                        await db.applications.add({ jobId: selectedJob.id, applierId: can.userId, status: val });
+                                                    try {
+                                                        const app = applications.find(a => a.jobId === selectedJob.id && a.applierId === can.userId);
+                                                        if (app) {
+                                                            await applicationApi.updateStatus(app.id, val);
+                                                        }
+                                                        
+                                                        await notificationApi.create({
+                                                            userId: can.userId,
+                                                            title: 'Application Updated',
+                                                            message: `Your status for ${selectedJob.title} is now: ${val}`,
+                                                            type: val === 'Offered' ? 'success' : 'info'
+                                                        });
+                                                        loadData();
+                                                    } catch (err) {
+                                                        console.error("Status update error:", err);
                                                     }
-                                                    await db.notifications.add({
-                                                        userId: can.userId,
-                                                        title: 'Application Updated',
-                                                        message: `Your status for ${selectedJob.title} is now: ${val}`,
-                                                        type: val === 'Offered' ? 'success' : 'info',
-                                                        read: false,
-                                                        createdAt: new Date().toISOString()
-                                                    });
                                                 }}
                                             >
                                                 <option>Applied</option>

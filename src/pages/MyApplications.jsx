@@ -1,25 +1,32 @@
-import React from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db/db';
+import React, { useState, useEffect } from 'react';
+import { applicationApi } from '../db/api';
 import { useAuth } from '../hooks/useAuth';
 import { Briefcase, Clock, ChevronRight, MapPin } from 'lucide-react';
 
 export const MyApplications = () => {
     const { user } = useAuth();
+    const [applications, setApplications] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Real-time applications
-    const applications = useLiveQuery(
-        () => user ? db.applications.where({ applierId: user.id }).toArray() : [],
-        [user?.id]
-    );
-    const jobs = useLiveQuery(() => db.jobs.toArray(), []);
+    useEffect(() => {
+        const fetchApps = async () => {
+            if (!user?.id) return;
+            try {
+                const res = await applicationApi.getByUser(user.id);
+                setApplications(res.data);
+            } catch (err) {
+                console.error("Error fetching applications:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchApps();
+    }, [user?.id]);
 
-    const enrichedApps = (applications && jobs)
-        ? applications.map(app => ({
-            ...app,
-            job: jobs.find(j => j.id === app.jobId)
-        }))
-        : [];
+    const enrichedApps = applications.map(app => ({
+        ...app,
+        job: app.jobId // Populated by backend
+    }));
 
     const columns = [
         { id: 'Applied', color: 'var(--primary)' },
@@ -28,7 +35,7 @@ export const MyApplications = () => {
         { id: 'Closed', color: 'var(--text-muted)' }
     ];
 
-    if (!applications || !jobs) return <div>Loading applications...</div>;
+    if (loading) return <div>Loading applications...</div>;
 
     return (
         <div className="apps-container animate-fade-in">

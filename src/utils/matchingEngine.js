@@ -1,8 +1,8 @@
 export const calculateMatchScore = (profile, job) => {
     if (!profile || !job) return { score: 0, matched: [], missing: [], reason: 'No data' };
 
-    const applierSkills = profile.skills.map(s => s.name.toLowerCase());
-    const jobSkills = job.skills.map(s => s.toLowerCase());
+    const applierSkills = (profile.skills || []).map(s => s.name?.toLowerCase() || "");
+    const jobSkills = (job.skills || []).map(s => s.toLowerCase());
 
     let matched = [];
     let missing = [];
@@ -22,12 +22,12 @@ export const calculateMatchScore = (profile, job) => {
 
     // Level alignment (20% weight)
     // Simplified: if mostly intermediate/advanced, give bonus
-    const advancedSkills = profile.skills.filter(s => ['Advanced', 'Expert'].includes(s.proficiency)).length;
+    const advancedSkills = (profile.skills || []).filter(s => ['Advanced', 'Expert'].includes(s.proficiency)).length;
     if (advancedSkills >= 3) score += 20;
     else if (advancedSkills >= 1) score += 10;
 
     // Domain/Title bonus (10% weight)
-    if (profile.experience.some(exp => exp.role.toLowerCase().includes(job.title.toLowerCase()))) {
+    if ((profile.experience || []).some(exp => exp.role?.toLowerCase().includes(job.title?.toLowerCase()))) {
         score += 10;
     }
 

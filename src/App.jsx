@@ -16,6 +16,8 @@ import { MyApplications } from './pages/MyApplications';
 import { InterviewPrep } from './pages/InterviewPrep';
 import { Landing } from './pages/Landing';
 import { ApplierDashboard } from './pages/ApplierDashboard';
+import { Register } from './pages/Register';
+import { AllUsers } from './pages/AllUsers';
 
 // Placeholder Pages for initial wiring
 const Dashboard = ({ role }) => (
@@ -32,6 +34,7 @@ const App = () => {
                 <Layout>
                     <Routes>
                         <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
 
                         {/* Applier Routes */}
                         <Route path="/dashboard" element={
@@ -85,7 +88,7 @@ const App = () => {
                         } />
                         <Route path="/all-users" element={
                             <ProtectedRoute allowedRoles={['ADMIN']}>
-                                <AdminDashboard />
+                                <AllUsers />
                             </ProtectedRoute>
                         } />
                         <Route path="/tickets" element={

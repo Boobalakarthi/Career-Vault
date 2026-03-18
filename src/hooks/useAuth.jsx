@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { db, seedDatabase } from '../db/db';
+import { authApi } from '../db/api';
 
 const AuthContext = createContext();
 
@@ -8,25 +8,36 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const init = async () => {
-            await seedDatabase();
-            const savedUser = localStorage.getItem('edply_user');
-            if (savedUser) {
-                setUser(JSON.parse(savedUser));
-            }
-            setLoading(false);
-        };
-        init();
+        const savedUser = localStorage.getItem('edply_user');
+        if (savedUser) {
+            setUser(JSON.parse(savedUser));
+        }
+        setLoading(false);
     }, []);
 
     const login = async (email, password) => {
-        const foundUser = await db.users.where({ email, password }).first();
-        if (foundUser) {
+        try {
+            const res = await authApi.login({ email, password });
+            const foundUser = res.data;
             setUser(foundUser);
             localStorage.setItem('edply_user', JSON.stringify(foundUser));
-            return { success: true };
+            return { success: true, user: foundUser };
+        } catch (err) {
+            return { success: false, message: err.response?.data?.message || 'Invalid credentials' };
         }
-        return { success: false, message: 'Invalid credentials' };
+    };
+
+    const register = async (userData) => {
+        try {
+            const res = await authApi.register(userData);
+            const newUser = res.data;
+            setUser(newUser);
+            localStorage.setItem('edply_user', JSON.stringify(newUser));
+            return { success: true };
+        } catch (error) {
+            console.error('Registration error:', error);
+            return { success: false, message: error.response?.data?.message || 'Registration failed' };
+        }
     };
 
     const logout = () => {
@@ -35,7 +46,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
             {children}
         </AuthContext.Provider>
     );

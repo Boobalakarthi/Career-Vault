@@ -1,6 +1,5 @@
-import React from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db/db';
+import React, { useState, useEffect } from 'react';
+import { jobApi, applicationApi, notificationApi } from '../db/api';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { calculateMatchScore } from '../utils/matchingEngine';
@@ -9,10 +8,22 @@ import { Briefcase, Target, BookOpen, ChevronRight, Zap, AlertTriangle, Trending
 export const JobMatches = () => {
     const { user } = useAuth();
     const { profile, loading: profileLoading } = useProfile();
+    const [jobs, setJobs] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Real-time: jobs update automatically
-    const jobsData = useLiveQuery(() => db.jobs.toArray(), []);
-    const jobs = jobsData || [];
+    useEffect(() => {
+        const fetchJobs = async () => {
+            try {
+                const res = await jobApi.getAll();
+                setJobs(res.data);
+            } catch (err) {
+                console.error("Error fetching jobs:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchJobs();
+    }, []);
 
     const matches = (profile && jobs && jobs.length > 0)
         ? jobs.map(job => ({
@@ -22,29 +33,35 @@ export const JobMatches = () => {
         : [];
 
     const handleApply = async (job) => {
-        const existing = await db.applications.where({ jobId: job.id, applierId: user.id }).first();
-        if (existing) {
-            alert('You have already applied to this job!');
-            return;
+        try {
+            const existingRes = await applicationApi.getByUser(user.id);
+            const isDuplicate = existingRes.data.some(app => app.jobId._id === job.id);
+            if (isDuplicate) {
+                alert('You have already applied to this job!');
+                return;
+            }
+            
+            await applicationApi.apply({
+                jobId: job.id,
+                applierId: user.id,
+                status: 'Applied'
+            });
+            
+            await notificationApi.create({
+                userId: user.id,
+                title: 'Application Submitted',
+                message: `You applied to ${job.title} at ${job.company}`,
+                type: 'success'
+            });
+            
+            alert(`Applied to ${job.title}!`);
+        } catch (err) {
+            console.error("Application error:", err);
+            alert("Failed to submit application");
         }
-        await db.applications.add({
-            jobId: job.id,
-            applierId: user.id,
-            status: 'Applied',
-            appliedAt: new Date().toISOString()
-        });
-        await db.notifications.add({
-            userId: user.id,
-            title: 'Application Submitted',
-            message: `You applied to ${job.title} at ${job.company}`,
-            type: 'success',
-            read: false,
-            createdAt: new Date().toISOString()
-        });
-        alert(`Applied to ${job.title}!`);
     };
 
-    if (profileLoading || jobs === undefined) return <div>Analyzing matches...</div>;
+    if (profileLoading || loading) return <div>Analyzing matches...</div>;
 
     return (
         <div className="matches-container animate-fade-in">

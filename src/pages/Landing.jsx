@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { db, seedDatabase } from '../db/db';
+import { publicApi } from '../db/api';
 import {
   Rocket, Briefcase, Users, BookOpen,
   ChevronRight, ArrowRight, Zap, Target,
@@ -16,15 +16,12 @@ export const Landing = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      await seedDatabase();
-      const jobCount = await db.jobs.count();
-      const userCount = await db.users.count();
-      const courseCount = await db.courses.count();
-      setStats({
-        jobs: jobCount,
-        users: userCount,
-        courses: courseCount
-      });
+      try {
+        const res = await publicApi.getStats();
+        setStats(res.data);
+      } catch (err) {
+        console.error("Landing stats error:", err);
+      }
     };
     fetchStats();
   }, []);
